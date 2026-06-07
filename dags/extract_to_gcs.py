@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.google.cloud.transfers.postgres_to_gcs import PostgresToGCSOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 
 default_args = {
     'owner': 'baljinder_singh',
@@ -38,3 +39,75 @@ with DAG(
             export_format='json',
             gzip=False,
         )
+        # 1. Load Customers
+        load_customers_to_bq = GCSToBigQueryOperator(
+            task_id="load_src_customers_to_bq",
+            bucket="olist-raw-landing-bucket",                   
+            source_objects=["landing/customers/*.csv"],       
+            destination_project_dataset_table="raw_olist.src_customers",
+            source_format="CSV",
+            write_disposition="WRITE_TRUNCATE",
+            skip_leading_rows=1,                              # Skips the CSV header row
+            autodetect=True,                                  # Tells BigQuery to automatically infer schemas
+            gcp_conn_id="google_cloud_default",
+        )
+
+        # 2. Load Orders
+        load_orders_to_bq = GCSToBigQueryOperator(
+            task_id="load_src_orders_to_bq",
+            bucket="olist-raw-landing-bucket",
+            source_objects=["landing/orders/*.csv"],
+            destination_project_dataset_table="raw_olist.src_orders",
+            source_format="CSV",
+            write_disposition="WRITE_TRUNCATE",
+            skip_leading_rows=1,
+            autodetect=True,
+            gcp_conn_id="google_cloud_default",
+        )
+
+        # 3. Load Order Items
+        load_order_items_to_bq = GCSToBigQueryOperator(
+            task_id="load_src_order_items_to_bq",
+            bucket="olist-raw-landing-bucket",
+            source_objects=["landing/order_items/*.csv"],
+            destination_project_dataset_table="raw_olist.src_order_items",
+            source_format="CSV",
+            write_disposition="WRITE_TRUNCATE",
+            skip_leading_rows=1,
+            autodetect=True,
+            gcp_conn_id="google_cloud_default",
+        )
+
+        # 4. Load Products
+        load_products_to_bq = GCSToBigQueryOperator(
+            task_id="load_src_products_to_bq",
+            bucket="olist-raw-landing-bucket",
+            source_objects=["landing/products/*.csv"],
+            destination_project_dataset_table="raw_olist.src_products",
+            source_format="CSV",
+            write_disposition="WRITE_TRUNCATE",
+            skip_leading_rows=1,
+            autodetect=True,
+            gcp_conn_id="google_cloud_default",
+        )
+
+        # 5. Load Order Payments
+        load_order_payments_to_bq = GCSToBigQueryOperator(
+            task_id="load_src_order_payments_to_bq",
+            bucket="olist-raw-landing-bucket",
+            source_objects=["landing/order_payments/*.csv"],
+            destination_project_dataset_table="raw_olist.src_order_payments",
+            source_format="CSV",
+            write_disposition="WRITE_TRUNCATE",
+            skip_leading_rows=1,
+            autodetect=True,
+            gcp_conn_id="google_cloud_default",
+        )
+
+        # Extract from Postgres to GCS >> Load from GCS into BigQuery Warehouse
+        # Extract to GCS >> Load to BigQuery Warehouse
+        extract_src_customers_to_gcs >> load_customers_to_bq
+        extract_src_orders_to_gcs >> load_orders_to_bq
+        extract_src_order_items_to_gcs >> load_order_items_to_bq
+        extract_src_products_to_gcs >> load_products_to_bq
+        extract_src_order_payments_to_gcs >> load_order_payments_to_bq
