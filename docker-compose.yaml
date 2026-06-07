@@ -1,0 +1,33 @@
+services:
+  # --- Existing Postgres Source Database ---
+  postgres_source:
+    image: postgres:15-alpine
+    container_name: olist_postgres_source
+    environment:
+      POSTGRES_USER: olist_admin
+      POSTGRES_PASSWORD: olist_password_2026
+      POSTGRES_DB: olist_ecommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # --- Apache Airflow ---
+  airflow:
+    image: apache/airflow:2.7.2-python3.10
+    container_name: olist_airflow
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - GOOGLE_APPLICATION_CREDENTIALS=/standard_gcp_credentials/application_default_credentials.json
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./config:/opt/airflow/config
+      - ./logs:/opt/airflow/logs
+      - C:\Users\kulwi\AppData\Roaming\gcloud:/standard_gcp_credentials:ro  # Mounts your local GCP auth to Airflow
+    ports:
+      - "8080:8080"
+    command: standalone
+
+volumes:
+  postgres_data:

@@ -1,0 +1,15 @@
+# Ignore local logs and metadata
+/logs/
+airflow.db
+airflow.cfg
+
+# Ignore sensitive environment variables and credentials
+.env
+*key.json
+application_default_credentials.json
+
+# Ignore OS specific files
+.DS_Store
+Thumbs.db
+
+venv/
