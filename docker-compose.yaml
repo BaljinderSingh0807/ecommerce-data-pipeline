@@ -20,6 +20,7 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
       - GOOGLE_APPLICATION_CREDENTIALS=/standard_gcp_credentials/application_default_credentials.json
+      - GOOGLE_CLOUD_PROJECT=project-b9e827f5-d159-4d49-990
     volumes:
       - ./dags:/opt/airflow/dags
       - ./config:/opt/airflow/config
